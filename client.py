@@ -15,6 +15,7 @@ async def send_message(message: str, writer: StreamWriter):
     writer.write((message + '\n').encode())
     await writer.drain()
 
+
 async def listen_for_messager(
         reader: StreamReader,
         message_store: MessageStore,
@@ -23,10 +24,12 @@ async def listen_for_messager(
         await message_store.append(message)
     await message_store.append('Сервер закры соединение')
 
+
 async def read_and_send(stdin_reader: StreamReader, writer: StreamWriter):
     while True:
         message = await read_line(stdin_reader)
         await send_message(message, writer)
+
 
 async def main():
     async def redraw_output(items: deque):
@@ -36,7 +39,7 @@ async def main():
             utils.delete_line()
             sys.stdout.write(item)
         utils.restore_cursor_position()
-    
+
     tty.setcbreak(0)
     os.system('clear')
     rows = utils.move_to_bottom_of_screen()
@@ -72,7 +75,7 @@ async def main():
             return_when=asyncio.FIRST_COMPLETED
         )
 
-    except Exception as ex:
+    except ConnectionAbortedError as ex:
         logging.exception(ex)
         writer.close()
         await writer.wait_closed()

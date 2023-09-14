@@ -51,7 +51,7 @@ class Server:
         try:
             writer.close()
             await writer.wait_closed()
-        except Exception as ex:
+        except ConnectionRefusedError as ex:
             logging.exception(
                 'Ошибка при закрытие клиентского серевера',
                 exc_info=ex
@@ -64,7 +64,7 @@ class Server:
             ) != b'':
                 await self._notify_all(f'{username}: {data.decode()}')
                 await self._notify_all(f'{username} has left the chat\n')
-        except Exception as ex:
+        except asyncio.exceptions.TimeoutError as ex:
             logging.exception(
                 'Ошибка при чтение данных',
                 exc_info=ex
