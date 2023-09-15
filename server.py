@@ -47,7 +47,7 @@ class Server:
         ))
 
     async def _remove_user(self, username):
-        writer: StreamWriter = self._username_to_write[writer]
+        writer: StreamWriter = self._username_to_write[username]
         del self._username_to_write[username]
         try:
             writer.close()
