@@ -37,17 +37,20 @@ async def main():
         utils.move_to_top_of_screen()
         for item in items:
             utils.delete_line()
-            sys.stdout.write(item)
+            # sys.stdout.write(item)
+            print(item)
         utils.restore_cursor_position()
 
-    tty.setcbreak(0)
+    # tty.setcbreak(0)
+    tty.setcbreak(sys.stdin)
     os.system('clear')
     rows = utils.move_to_bottom_of_screen()
 
     messages = MessageStore(redraw_output, rows - 1)
 
     stdin_reader = await create_std_reader()
-    sys.stdout.write('Введите имя пользователя:')
+    # sys.stdout.write('Введите имя пользователя:')
+    print('Введите имя пользователя:')
     username = await read_line(stdin_reader)
 
     reader, writer = await asyncio.open_connection(
