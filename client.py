@@ -20,8 +20,8 @@ async def listen_for_messager(
         reader: StreamReader,
         message_store: MessageStore,
 ):
-    while (message := reader.readline()) != b'':
-        await message_store.append(message)
+    while (message := await reader.readline()) != b'':
+        await message_store.append(message.decode())
     await message_store.append('Сервер закры соединение')
 
 

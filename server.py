@@ -4,11 +4,11 @@ from asyncio import StreamReader, StreamWriter
 
 
 class Server:
-    """Chast_server."""
+    """Сервер основанный на транспортных потоках."""
     def __init__(self, host="127.0.0.1", port=8000):
         self._host = host
         self._port = port
-        self._username_to_write = []
+        self._username_to_write = {}
 
     async def _start_server(self):
         server = await asyncio.start_server(
@@ -25,8 +25,9 @@ class Server:
         print(f'CONNECTED {reader} {writer}')
         command, args = command.split(b' ')
         if command == b'connect':
-            username = args.replace(b'\n', b'')
-            await self._add_user(username, reader, writer)
+            username = args.replace(b'\n', b'').decode()
+            self._add_user(username, reader, writer)
+            await self._on_connect(username, writer)
 
     async def _on_connect(self, username, writer: StreamWriter):
         writer.write(
@@ -37,8 +38,8 @@ class Server:
             f'Подключился {username}\n'
         )
 
-    async def _add_user(self, username: str,
-                        reader: StreamReader, writer: StreamWriter):
+    def _add_user(self, username: str,
+                  reader: StreamReader, writer: StreamWriter):
         self._username_to_write[username] = writer
         asyncio.create_task(self._listen_for_messages(
             username,
@@ -63,7 +64,7 @@ class Server:
                 data := await asyncio.wait_for(reader.readline(), 60)
             ) != b'':
                 await self._notify_all(f'{username}: {data.decode()}')
-                await self._notify_all(f'{username} has left the chat\n')
+            await self._notify_all(f'{username} has left the chat\n')
         except asyncio.exceptions.TimeoutError as ex:
             logging.exception(
                 'Ошибка при чтение данных',
@@ -72,7 +73,7 @@ class Server:
 
     async def _notify_all(self, message: str):
         inactive_user = []
-        for username, writer in self._username_to_write:
+        for username, writer in self._username_to_write.items():
             try:
                 writer.write(message.encode())
                 await writer.drain()

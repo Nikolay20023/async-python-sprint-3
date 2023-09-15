@@ -8,4 +8,4 @@ class MessageStore:
 
     async def append(self, item):
         self._deque.append(item)
-        await self._callback(self._deque)   
+        await self._callback(self._deque)
