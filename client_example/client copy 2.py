@@ -2,31 +2,28 @@ import asyncio
 import os
 import logging
 from collections import deque
-from asyncio import StreamReader, StreamWriter
+from asyncio import StreamReader
 import utils
 from read_line_util import read_line
 from message_store import MessageStore
 from stdin import create_std_reader
-from config import Setting
 
 
 class Client:
     def __init__(self, host, port) -> None:
-        self._host: str = host
-        self._port: int = port
-        self.reader: StreamReader = None
-        self._username: str = None
-        self.writer: StreamWriter = None
-        self.messages: MessageStore = None
+        self._host = host
+        self._port = port
+        self.reader = None
+        self._username = None
+        self.writer = None
+        self.messages = None
 
     async def on_connect(self):
-        """Получаем reader writer посредством подключение соединения """
         self.reader, self.writer = await asyncio.open_connection(
             self._host, self._port
         )
 
     async def send_message(self, message: str):
-        """Отправить сообщение по StreamWiter."""
         self.writer.write((message + '\n').encode())
         await self.writer.drain()
 
@@ -35,8 +32,6 @@ class Client:
             reader: StreamReader,
             message_store: MessageStore,
     ):
-        """Прослушивать сообщение от сервера
-        и добавлять их в хранилище сообщений."""
         while (message := await reader.readline()) != b'':
             await message_store.append(message.decode())
         await message_store.append('Сервер закрыл соединение')
@@ -45,18 +40,12 @@ class Client:
             self,
             stdin_reader: StreamReader,
     ):
-        """Считать сообщение с помощью переопределённого stdin_reader."""
         while True:
             message = await read_line(stdin_reader)
             await self.send_message(message)
 
     async def run(self):
-        """Основная логика Client
-        """
         async def redraw_output(items: deque):
-            """Обратный вызов который
-            перемещает курсор в начало экрана перерисовыввет
-            экран и возвращает в начало"""
             utils.save_cursor_position()
             utils.move_to_top_of_screen()
             for item in items:
@@ -103,9 +92,7 @@ class Client:
 
 
 async def main():
-    """Запуск клиента"""
-    settings = Setting()
-    client = Client(settings.host, settings.port)
+    client = Client('127.0.0.1', 8000)
     await client.run()
 
 asyncio.run(main())
